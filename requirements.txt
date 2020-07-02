@@ -1,0 +1,7 @@
+numpy==1.15.4
+matplotlib==2.2.3
+bokeh==2.0.2
+cython==0.29.20
+ripser==0.5.2
+setuptools~=47.3.0
+scipy~=1.5.0
