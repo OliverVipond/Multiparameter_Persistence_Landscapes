@@ -3,15 +3,17 @@ from one_parameter_classes import Bar, Barcode, Landscape, Landscapes
 import rivet
 
 
-def sample_circle_disc(alpha, n):
-    a = int(np.floor(alpha * n))
-    b = n - a
-    theta = np.random.uniform(0, 2 * np.pi, a)
+def sample_circle_disc(alpha, number_of_points, radius=1, centre=None):
+    if centre is None:
+        centre = [0, 0]
+    number_of_circle_points = int(np.floor(alpha * number_of_points))
+    number_of_disc_points = number_of_points - number_of_circle_points
+    theta = np.random.uniform(0, 2 * np.pi, number_of_circle_points)
     circle_points = np.vstack((np.sin(theta), np.cos(theta)))
-    r = np.array(np.random.uniform(0, 1, b))
-    t = np.random.uniform(0, 2 * np.pi, b)
+    r = np.array(np.random.uniform(0, 1, number_of_disc_points))
+    t = np.random.uniform(0, 2 * np.pi, number_of_disc_points)
     disc_points = np.multiply(np.vstack((np.sin(t), np.cos(t))), np.sqrt(r))
-    noisy_points = np.hstack((circle_points, disc_points)).T
+    noisy_points = centre + radius * np.hstack((circle_points, disc_points)).T
     return noisy_points
 
 

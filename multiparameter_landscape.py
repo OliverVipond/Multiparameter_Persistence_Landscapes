@@ -54,7 +54,6 @@ class multiparameter_landscape(object):
 
         self.landscape_matrix = self.compute_multiparameter_landscape
 
-
     def number_of_ysteps(self):
         number_of_ysteps = int(round((self.bounds.upper_right[1] - self.bounds.lower_left[1])
                                      / self.grid_step_size * self.weight[0] + 1))
@@ -153,7 +152,6 @@ class multiparameter_landscape(object):
                               self.get_parameter_step_size()]
             return x_values_range
 
-    @staticmethod
     def compute_multiparameter_landscape(self):
         weighted_landscape_matrix = np.empty((self.maximum_landscape_depth,
                                               self.number_of_ysteps(),

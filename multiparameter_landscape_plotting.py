@@ -61,7 +61,7 @@ def plot_a_two_parameter_landscape(multi_landscape: multiparameter_landscape, in
         ]
 
     source = ColumnDataSource(
-        data=dict(image=[landscape_matrix_to_img(multi_landscape.landscape_matrix[index, :, :])],
+        data=dict(image=[landscape_matrix_to_img(multi_landscape.landscape_matrix()[index, :, :])],
                   x=[multi_landscape.bounds.lower_left[0]],
                   y=[multi_landscape.bounds.lower_left[1]],
                   dw=[multi_landscape.bounds.upper_right[0] - multi_landscape.bounds.lower_left[0]],
@@ -72,6 +72,8 @@ def plot_a_two_parameter_landscape(multi_landscape: multiparameter_landscape, in
         x_range=Range1d(multi_landscape.bounds.lower_left[0], multi_landscape.bounds.upper_right[0], bounds='auto'),
         y_range=Range1d(multi_landscape.bounds.lower_left[1], multi_landscape.bounds.upper_right[1], bounds='auto'),
         title="Multiparameter Landscape k=" + str(index + 1),
+        width=250,
+        height=250,
         sizing_mode='scale_both', match_aspect=True,
         toolbar_location=None
     )
@@ -621,8 +623,8 @@ def Rips_Codensity_Bifiltration(points, radius_range, kNN: int = None, maxind: i
                              )
 
     filt_plot = figure(title='Filtration',
-                       plot_width=600,
-                       plot_height=600,
+                       plot_width=450,
+                       plot_height=500,
                        min_border=0,
                        toolbar_location=None,
                        match_aspect=True)

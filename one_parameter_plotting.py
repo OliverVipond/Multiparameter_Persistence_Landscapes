@@ -22,6 +22,7 @@ def Rips_Filtration(points, radius_range):
     vertical_line_color = "#FB8072"
     bar_line_width = 2
     circle_opacity = 0.2
+    circle_color = "green"
     circle_line_color = "black"
 
     source = ColumnDataSource(data=dict(x=points[:, 0],
@@ -76,10 +77,7 @@ def Rips_Filtration(points, radius_range):
                          x_axis_label='Filtration Value',
                          x_range=(radius_range[0], radius_range[1]))
 
-    barcode_plot.yaxis.major_tick_line_color = None  # turn off y-axis major ticks
-    barcode_plot.yaxis.minor_tick_line_color = None  # turn off y-axis minor ticks
-    barcode_plot.yaxis.major_label_text_font_size = '0pt'  # preferred method for removing tick labels
-    barcode_plot.legend.location = "bottom_right"
+
 
     for bar in range(len(H_0_Bars)):
         if H_0_Bars[bar, 1] < radius_range[1]:
@@ -100,6 +98,10 @@ def Rips_Filtration(points, radius_range):
 
     barcode_plot.ray(x="s", y="y", length="y", angle="angle", source=vline, color="#FB8072", line_width=bar_line_width)
 
+    barcode_plot.yaxis.major_tick_line_color = None  # turn off y-axis major ticks
+    barcode_plot.yaxis.minor_tick_line_color = None  # turn off y-axis minor ticks
+    barcode_plot.yaxis.major_label_text_font_size = '0pt'  # preferred method for removing tick labels
+    barcode_plot.legend.location = "bottom_right"
     H0rivet_barcode = ripser_to_rivet_bcode(H_0_Bars)
     L = compute_landscapes(H0rivet_barcode)
 
