@@ -24,7 +24,7 @@ def compute_mean_landscape(Sample: List[multiparameter_landscape]):
     mean_landscape.landscape_matrix = Sample[0].landscape_matrix
     for s in range(0, len(Sample)):
         mean_landscape.landscape_matrix += Sample[s].landscape_matrix
-    mean_landscape /= len(Sample)
+    mean_landscape.landscape_matrix /= len(Sample)
     return mean_landscape
 
 
@@ -61,7 +61,7 @@ def plot_a_two_parameter_landscape(multi_landscape: multiparameter_landscape, in
         ]
 
     source = ColumnDataSource(
-        data=dict(image=[landscape_matrix_to_img(multi_landscape.landscape_matrix()[index, :, :])],
+        data=dict(image=[landscape_matrix_to_img(multi_landscape.landscape_matrix[index, :, :])],
                   x=[multi_landscape.bounds.lower_left[0]],
                   y=[multi_landscape.bounds.lower_left[1]],
                   dw=[multi_landscape.bounds.upper_right[0] - multi_landscape.bounds.lower_left[0]],
@@ -182,6 +182,7 @@ def compare_multiparameter_landscape_samples(Samples: List[List[multiparameter_l
     else:
         if not len(GroupLabels) == len(Samples):
             raise TypeError('GroupLabels list is not the same length as the sample list')
+        GroupLabels = GroupLabels * (indices[1] - indices[0] + 1)
 
     if colors is None:
         colors = ['plum', 'powderblue', 'gold', 'greenyellow', 'mediumblue', 'firebrick']
@@ -321,10 +322,10 @@ def compare_multiparameter_landscape_samples(Samples: List[List[multiparameter_l
         var y_steps = lp.data['y_steps'];
         var indices = lp.data['indices'][0];
 
-        var xmin = Math.round(xrange[0]/ bounds.upper_right[0]* x_steps[0]);
-        var xmax = Math.round(xrange[1]/ bounds.upper_right[0]* x_steps[0]);
-        var ymin = Math.round(ylow/ bounds.upper_right[1]* y_steps[0]);
-        var ymax = Math.round(yhigh/ bounds.upper_right[1]* y_steps[0]);
+        var xmin = Math.round(xrange[0]/ bounds[1][0]* x_steps[0]);
+        var xmax = Math.round(xrange[1]/ bounds[1][0]* x_steps[0]);
+        var ymin = Math.round(ylow/ bounds[1][1]* y_steps[0]);
+        var ymax = Math.round(yhigh/ bounds[1][1]* y_steps[0]);
 
         var q1 = bpdata['q1']
         var q2 = bpdata['q2']
@@ -458,10 +459,10 @@ def compare_multiparameter_landscape_samples(Samples: List[List[multiparameter_l
         var x_steps = lp.data['x_steps'];
         var y_steps = lp.data['y_steps'];
 
-        var xmin = Math.round(xlow/ bounds.upper_right[0]* x_steps[0]);
-        var xmax = Math.round(xhigh/ bounds.upper_right[0]* x_steps[0]);
-        var ymin = Math.round(yrange[0]/ bounds.upper_right[1]* y_steps[0]);
-        var ymax = Math.round(yrange[1]/ bounds.upper_right[1]* y_steps[0]);
+        var xmin = Math.round(xlow/ bounds[1][0]* x_steps[0]);
+        var xmax = Math.round(xhigh/ bounds[1][0]* x_steps[0]);
+        var ymin = Math.round(yrange[0]/ bounds[1][1]* y_steps[0]);
+        var ymax = Math.round(yrange[1]/ bounds[1][1]* y_steps[0]);
 
         var q1 = bpdata['q1']
         var q2 = bpdata['q2']

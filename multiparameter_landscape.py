@@ -52,7 +52,7 @@ class multiparameter_landscape(object):
         else:
             self.grid_step_size = grid_step_size
 
-        self.landscape_matrix = self.compute_multiparameter_landscape
+        self.landscape_matrix = self.compute_multiparameter_landscape()
 
     def number_of_ysteps(self):
         number_of_ysteps = int(round((self.bounds.upper_right[1] - self.bounds.lower_left[1])

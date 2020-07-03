@@ -1,6 +1,7 @@
 import numpy as np
 from one_parameter_classes import Bar, Barcode, Landscape, Landscapes
 import rivet
+from scipy.spatial import distance_matrix
 
 
 def sample_circle_disc(alpha, number_of_points, radius=1, centre=None):
@@ -117,3 +118,11 @@ def write_sample(filtered_points, RipsMax, description):
                header='points \n 2 \n ' + str(RipsMax) + ' \n' + description, comments='')
     filename = description + 'RipsMax' + str(RipsMax) + '.txt'
     return filename
+
+
+def kNN_filter(points, kNN):
+    D = distance_matrix(points, points)
+    sortedD = np.sort(D)
+    codensity = np.sum(sortedD[:, :kNN], axis=1)
+    filtered_points = np.hstack((points, np.expand_dims(codensity, axis=1)))
+    return filtered_points
