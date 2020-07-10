@@ -716,3 +716,135 @@ def Rips_Codensity_Bifiltration(points, radius_range, kNN: int = None, maxind: i
     layout = column(row(rips_slider, column(filt_plot, codensity_slider)), row(landscape_plots))
 
     return layout
+
+
+def Rips_Filter_Bifiltration(filtered_points, radius_range, palette="Viridis256", FilterName="Filter",
+                             maxind: int = None, dim: int = None):
+    if maxind is None:
+        maxind = 5
+    if dim is None:
+        dim = 0
+
+    points = filtered_points[:, :2]
+    filter = filtered_points[:, 2]
+    # Don't normalise filter
+    # filter = (radius_range[1] - radius_range[0]) * normalise_filter(filter, 5) + radius_range[0]
+    # filtered_points[:,2] = filter
+
+    alpha = np.ones(filter.shape) * 0.3
+    exp_cmap = LinearColorMapper(palette=palette,
+                                 low=radius_range[0],
+                                 high=radius_range[1])
+
+    source = ColumnDataSource(data=dict(x=points[:, 0],
+                                        y=points[:, 1],
+                                        sizes=(radius_range[0] + radius_range[1]) / 4 * np.ones(points.shape[0]),
+                                        filter=filter,
+                                        alpha=alpha
+
+                                        )
+                              )
+
+    vline = ColumnDataSource(data=dict(c=[radius_range[0]],
+                                       y=[0],
+                                       angle=[np.pi / 2]
+                                       )
+                             )
+    hline = ColumnDataSource(data=dict(s=[radius_range[0]],
+                                       x=[0],
+                                       angle=[0]
+                                       )
+                             )
+
+    filt_plot = figure(title='Filtration',
+                       plot_width=450,
+                       plot_height=500,
+                       min_border=0,
+                       toolbar_location=None,
+                       match_aspect=True)
+
+    glyph = Circle(x="x", y="y", radius="sizes", line_color="black",
+                   fill_color={'field': 'filter', 'transform': exp_cmap},
+                   fill_alpha="alpha", line_width=1, line_alpha="alpha")
+
+    filt_plot.add_glyph(source, glyph)
+    filt_plot.add_layout(ColorBar(color_mapper=exp_cmap, location=(0, 0), orientation="horizontal"), "below")
+
+    rips_callback = CustomJS(args=dict(source=source, hline=hline), code="""
+    var data = source.data;
+    var s = cb_obj.value
+    var sizes = data['sizes']
+
+
+    for (var i = 0; i < sizes.length; i++) {
+        sizes[i] = s/2
+    }
+    var hdata = hline.data;
+    var step = hdata['s']
+    step[0] = s
+    hline.change.emit();
+    source.change.emit();
+    """)
+
+    filter_callback = CustomJS(args=dict(source=source, vline=vline), code="""
+    var data = source.data;
+    var c = cb_obj.value
+    var alpha = data['alpha']
+    var filter = data['filter']
+
+    for (var i = 0; i<filter.length; i++){
+        if(filter[i]>c){
+        alpha[i] = 0
+        }
+        if(filter[i]<=c){
+        alpha[i] = 0.3
+        }
+    }
+
+    var vdata = vline.data;
+    var step = vdata['c']
+    step[0] = c
+    vline.change.emit();
+    source.change.emit();
+    """)
+
+    rips_slider = Slider(start=radius_range[0], end=radius_range[1], value=(radius_range[0] + radius_range[1]) / 2,
+                         step=(radius_range[1] - radius_range[0]) / 100, title="Rips",
+                         orientation="vertical", height_policy="auto", direction="rtl", height=300,
+                         margin=(10, 30, 10, 70))
+
+    rips_slider.js_on_change('value', rips_callback)
+
+    filter_slider = Slider(start=radius_range[0], end=radius_range[1], value=radius_range[1],
+                           step=(radius_range[1] - radius_range[0]) / 100, title=FilterName,
+                           orientation="horizontal", width_policy="auto", direction="ltr", width=300,
+                           margin=(10, 10, 10, 70))
+
+    filter_slider.js_on_change('value', filter_callback)
+
+    # Run Rivet and Landscape Computation #
+
+    computed_data = Compute_Rivet(filtered_points, resolution=50, dim=dim, RipsMax=radius_range[1])
+    multi_landscape = multiparameter_landscape(computed_data,
+                                               grid_step_size=(radius_range[1] - radius_range[0]) / 100,
+                                               bounds=[[radius_range[0], radius_range[0]],
+                                                       [radius_range[1], radius_range[1]]],
+                                               maxind=maxind)
+
+    TOOLTIPS = [
+        (FilterName, "$x"),
+        ("Radius", "$y"),
+        ("Landscape_Value", "@image")
+    ]
+
+    landscape_plots = plot_multiparameter_landscapes(multi_landscape, indices=[1, maxind], TOOLTIPS=TOOLTIPS)
+
+    for plot in landscape_plots.children:
+        plot.ray(x="c", y="y", length="y", angle="angle",
+                 source=vline, color='white', line_width=2, alpha=0.5)
+        plot.ray(x="x", y="s", length="x", angle="angle",
+                 source=hline, color='white', line_width=2, alpha=0.5)
+
+    layout = column(row(rips_slider, column(filt_plot, filter_slider)), row(landscape_plots))
+
+    return layout
