@@ -1,5 +1,5 @@
 import numpy as np
-from bokeh.layouts import column
+from bokeh.layouts import column, row
 from bokeh.models import Circle, CustomJS, Slider
 from bokeh.plotting import ColumnDataSource
 from bokeh.plotting import figure
@@ -39,6 +39,8 @@ def Rips_Filtration(points, radius_range):
     filt_plot = figure(title='Filtration',
                        plot_width=300,
                        plot_height=300,
+                       aspect_ratio="auto",
+                       height_policy="auto",
                        min_border=0,
                        toolbar_location=None,
                        match_aspect=True)
@@ -65,14 +67,18 @@ def Rips_Filtration(points, radius_range):
                           plot_width=800,
                           plot_height=200,
                           min_border=0,
+                          aspect_ratio="auto",
+                          height_policy="auto",
                           toolbar_location=None,
                           x_axis_label='Filtration Value',
                           x_range=(radius_range[0], radius_range[1]))
 
     lscape_plot = figure(title='Landscapes',
                          plot_width=800,
-                         plot_height=300,
+                         plot_height=200,
                          min_border=0,
+                         aspect_ratio="auto",
+                         height_policy="auto",
                          toolbar_location=None,
                          x_axis_label='Filtration Value',
                          x_range=(radius_range[0], radius_range[1]))
@@ -137,6 +143,6 @@ def Rips_Filtration(points, radius_range):
                     step=(radius_range[1] - radius_range[0]) / 100, title="Rips Parameter")
     slider.js_on_change('value', callback)
 
-    layout = column(slider, filt_plot, barcode_plot, lscape_plot)
+    layout = column( row(filt_plot) ,slider,  barcode_plot, lscape_plot)
 
     return layout
