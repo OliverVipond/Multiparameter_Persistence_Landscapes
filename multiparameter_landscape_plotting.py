@@ -624,8 +624,8 @@ def Rips_Codensity_Bifiltration(points, radius_range, kNN: int = None, maxind: i
                              )
 
     filt_plot = figure(title='Filtration',
-                       plot_width=450,
-                       plot_height=500,
+                       plot_width=360,
+                       plot_height=430,
                        min_border=0,
                        toolbar_location=None,
                        match_aspect=True)
@@ -677,15 +677,17 @@ def Rips_Codensity_Bifiltration(points, radius_range, kNN: int = None, maxind: i
 
     rips_slider = Slider(start=radius_range[0], end=radius_range[1], value=(radius_range[0] + radius_range[1]) / 2,
                          step=(radius_range[1] - radius_range[0]) / 100, title="Rips",
-                         orientation="vertical", height_policy="auto", direction="rtl", height=300,
-                         margin=(10, 30, 10, 70))
+                         orientation="vertical", aspect_ratio=0.2,
+                         height_policy="auto", direction="rtl", height=300,
+                         margin = (10,10,10,70))
 
     rips_slider.js_on_change('value', rips_callback)
 
     codensity_slider = Slider(start=radius_range[0], end=radius_range[1], value=radius_range[1],
                               step=(radius_range[1] - radius_range[0]) / 100, title=str(kNN) + "NN-Codensity",
-                              orientation="horizontal", width_policy="auto", direction="ltr", width=300,
-                              margin=(10, 10, 10, 70))
+                              orientation="horizontal", aspect_ratio  = 10,
+                              width_policy="auto", direction="ltr", width=300,
+                              margin=(10,10,10,40))
 
     codensity_slider.js_on_change('value', codensity_callback)
 
@@ -713,7 +715,10 @@ def Rips_Codensity_Bifiltration(points, radius_range, kNN: int = None, maxind: i
         plot.ray(x="x", y="s", length="x", angle="angle",
                  source=hline, color='white', line_width=2, alpha=0.5)
 
-    layout = column(row(rips_slider, column(filt_plot, codensity_slider)), row(landscape_plots))
+    layout = column(row(rips_slider,
+                        column(filt_plot, codensity_slider)),
+                    row(landscape_plots),
+                    sizing_mode="scale_both")
 
     return layout
 
@@ -757,8 +762,8 @@ def Rips_Filter_Bifiltration(filtered_points, radius_range, palette="Viridis256"
                              )
 
     filt_plot = figure(title='Filtration',
-                       plot_width=450,
-                       plot_height=500,
+                       plot_width=360,
+                       plot_height=430,
                        min_border=0,
                        toolbar_location=None,
                        match_aspect=True)
@@ -810,15 +815,19 @@ def Rips_Filter_Bifiltration(filtered_points, radius_range, palette="Viridis256"
 
     rips_slider = Slider(start=radius_range[0], end=radius_range[1], value=(radius_range[0] + radius_range[1]) / 2,
                          step=(radius_range[1] - radius_range[0]) / 100, title="Rips",
-                         orientation="vertical", height_policy="auto", direction="rtl", height=300,
-                         margin=(10, 30, 10, 70))
+                         orientation="vertical", aspect_ratio  = 0.2,
+                         height_policy="auto", direction="rtl", height=300,
+                         margin = (10,10,10,70)
+                         )
 
     rips_slider.js_on_change('value', rips_callback)
 
     filter_slider = Slider(start=radius_range[0], end=radius_range[1], value=radius_range[1],
                            step=(radius_range[1] - radius_range[0]) / 100, title=FilterName,
-                           orientation="horizontal", width_policy="auto", direction="ltr", width=300,
-                           margin=(10, 10, 10, 70))
+                           orientation="horizontal", aspect_ratio  = 10,
+                           width_policy="auto", direction="ltr", width=300,
+                           margin = (10,10,10,40)
+                           )
 
     filter_slider.js_on_change('value', filter_callback)
 
@@ -845,6 +854,6 @@ def Rips_Filter_Bifiltration(filtered_points, radius_range, palette="Viridis256"
         plot.ray(x="x", y="s", length="x", angle="angle",
                  source=hline, color='white', line_width=2, alpha=0.5)
 
-    layout = column(row(rips_slider, column(filt_plot, filter_slider)), row(landscape_plots))
+    layout = column(row(rips_slider, column(filt_plot, filter_slider)), row(landscape_plots), sizing_mode="scale_both")
 
     return layout

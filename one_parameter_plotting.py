@@ -143,6 +143,6 @@ def Rips_Filtration(points, radius_range):
                     step=(radius_range[1] - radius_range[0]) / 100, title="Rips Parameter")
     slider.js_on_change('value', callback)
 
-    layout = column( row(filt_plot) ,slider,  barcode_plot, lscape_plot)
+    layout = column( row(filt_plot) ,slider,  barcode_plot, lscape_plot, sizing_mode="scale_both")
 
     return layout
