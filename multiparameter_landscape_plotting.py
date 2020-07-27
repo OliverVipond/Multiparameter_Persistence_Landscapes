@@ -49,7 +49,7 @@ def rotate_stack(landscape_stack):
     return rotated_landscape_stack
 
 
-def plot_a_two_parameter_landscape(multi_landscape: multiparameter_landscape, index: int, TOOLTIPS=None):
+def plot_a_two_parameter_landscape(multi_landscape: multiparameter_landscape, index: int, TOOLTIPS=None, high=None):
     if (index > multi_landscape.maximum_landscape_depth) or (index < 0):
         raise TypeError('Index out of range')
 
@@ -59,6 +59,11 @@ def plot_a_two_parameter_landscape(multi_landscape: multiparameter_landscape, in
             ("y", "$y"),
             ("value", "@image")
         ]
+
+    if high is None:
+        high = np.max(multi_landscape.landscape_matrix[index, :, :])
+
+    color_mapper = LinearColorMapper(palette=inferno(256), low=0, high=high)
 
     source = ColumnDataSource(
         data=dict(image=[landscape_matrix_to_img(multi_landscape.landscape_matrix[index, :, :])],
@@ -80,7 +85,7 @@ def plot_a_two_parameter_landscape(multi_landscape: multiparameter_landscape, in
 
     img = plot.image(source=source.data, image='image', x='x', y='y',
                      dw='dw', dh='dh',
-                     palette=inferno(256))
+                     color_mapper=color_mapper)
 
     img_hover = HoverTool(renderers=[img], tooltips=TOOLTIPS)
     plot.add_tools(img_hover)
@@ -88,7 +93,8 @@ def plot_a_two_parameter_landscape(multi_landscape: multiparameter_landscape, in
     return plot
 
 
-def plot_multiparameter_landscapes(multi_landscape: multiparameter_landscape, indices=None, TOOLTIPS=None):
+def plot_multiparameter_landscapes(multi_landscape: multiparameter_landscape, indices=None,
+                                   TOOLTIPS=None, normalise_scale=True):
     """ Plots the landscapes in the collection to a single axes in range index = [ind_min,ind_max]"""
 
     if indices is None:
@@ -98,13 +104,16 @@ def plot_multiparameter_landscapes(multi_landscape: multiparameter_landscape, in
         indices = indices
     else:
         raise TypeError('Index range must provide integer values no bigger that the landscape depth')
-
+    if normalise_scale:
+        high = np.max(multi_landscape.landscape_matrix[indices[0]-1, :, :])
+    else:
+        high = None
     # Make Plot #
 
     plots = []
 
     for k in range(indices[0] - 1, indices[1]):
-        plots.append(plot_a_two_parameter_landscape(multi_landscape, k, TOOLTIPS=TOOLTIPS))
+        plots.append(plot_a_two_parameter_landscape(multi_landscape, k, TOOLTIPS=TOOLTIPS, high=high))
 
     for k in range(0, len(plots)):
         plots[k].x_range = plots[0].x_range
@@ -527,10 +536,10 @@ def compare_multiparameter_landscape_samples(Samples: List[List[multiparameter_l
 
     x_range_slider = RangeSlider(start=bounds.lower_left[0], end=bounds.upper_right[0],
                                  value=(bounds.lower_left[0], bounds.upper_right[0]), step=.1, title="x_range",
-                                 width=400)
+                                 width=300)
     y_range_slider = RangeSlider(start=bounds.lower_left[1], end=bounds.upper_right[1],
                                  value=(bounds.lower_left[1], bounds.upper_right[1]), step=.1, title="y_range",
-                                 width=400)
+                                 width=300)
     x_range_slider.js_on_change('value', callback_x)
     y_range_slider.js_on_change('value', callback_y)
 
@@ -552,7 +561,7 @@ def compare_multiparameter_landscape_samples(Samples: List[List[multiparameter_l
             plot.border_fill_color = colors[s]
             plot.min_border = 15
 
-    boxplots = figure(x_range=boxplot_source.data['cats'], height=350)
+    boxplots = figure(x_range=boxplot_source.data['cats'], height=250)
 
     # stems
     boxplots.segment(source=boxplot_source, x0='cats', y0='upper', x1='cats', y1='q3', color="black")
@@ -568,9 +577,9 @@ def compare_multiparameter_landscape_samples(Samples: List[List[multiparameter_l
     boxplots.rect(source=boxplot_source, x='cats', y='lower', width=0.2, height=0.000001, color='black')
     boxplots.rect(source=boxplot_source, x='cats', y='upper', width=0.2, height=0.000001, color='black')
 
-    boxplots.legend.glyph_width = 100
-    boxplots.legend.glyph_height = 40
-    boxplots.legend.label_text_font_size = '14pt'
+    boxplots.legend.glyph_width = 50
+    boxplots.legend.glyph_height = 20
+    boxplots.legend.label_text_font_size = '10pt'
 
     boxplots.xgrid.grid_line_color = None
     boxplots.sizing_mode = "scale_both"
@@ -596,7 +605,7 @@ def Rips_Codensity_Bifiltration(points, radius_range, kNN: int = None, maxind: i
 
     D = distance_matrix(points, points)
     sortedD = np.sort(D)
-    codensity = np.sum(sortedD[:, :kNN], axis=1)
+    codensity = np.sum(sortedD[:, :kNN+1], axis=1)
     codensity = (radius_range[1] - radius_range[0]) * normalise_filter(codensity, 5) + radius_range[0]
     alpha = np.ones(codensity.shape) * 0.3
     exp_cmap = LinearColorMapper(palette="Viridis256",
@@ -679,15 +688,15 @@ def Rips_Codensity_Bifiltration(points, radius_range, kNN: int = None, maxind: i
                          step=(radius_range[1] - radius_range[0]) / 100, title="Rips",
                          orientation="vertical", aspect_ratio=0.2,
                          height_policy="auto", direction="rtl", height=300,
-                         margin = (10,10,10,70))
+                         margin=(10, 40, 10, 70))
 
     rips_slider.js_on_change('value', rips_callback)
 
     codensity_slider = Slider(start=radius_range[0], end=radius_range[1], value=radius_range[1],
                               step=(radius_range[1] - radius_range[0]) / 100, title=str(kNN) + "NN-Codensity",
-                              orientation="horizontal", aspect_ratio  = 10,
+                              orientation="horizontal", aspect_ratio=10,
                               width_policy="auto", direction="ltr", width=300,
-                              margin=(10,10,10,40))
+                              margin=(10, 10, 10, 40))
 
     codensity_slider.js_on_change('value', codensity_callback)
 
@@ -815,18 +824,18 @@ def Rips_Filter_Bifiltration(filtered_points, radius_range, palette="Viridis256"
 
     rips_slider = Slider(start=radius_range[0], end=radius_range[1], value=(radius_range[0] + radius_range[1]) / 2,
                          step=(radius_range[1] - radius_range[0]) / 100, title="Rips",
-                         orientation="vertical", aspect_ratio  = 0.2,
+                         orientation="vertical", aspect_ratio=0.2,
                          height_policy="auto", direction="rtl", height=300,
-                         margin = (10,10,10,70)
+                         margin=(10, 30, 10, 70)
                          )
 
     rips_slider.js_on_change('value', rips_callback)
 
     filter_slider = Slider(start=radius_range[0], end=radius_range[1], value=radius_range[1],
                            step=(radius_range[1] - radius_range[0]) / 100, title=FilterName,
-                           orientation="horizontal", aspect_ratio  = 10,
+                           orientation="horizontal", aspect_ratio=10,
                            width_policy="auto", direction="ltr", width=300,
-                           margin = (10,10,10,40)
+                           margin=(10, 10, 10, 40)
                            )
 
     filter_slider.js_on_change('value', filter_callback)

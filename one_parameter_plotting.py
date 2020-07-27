@@ -140,7 +140,7 @@ def Rips_Filtration(points, radius_range):
                     source=vline, color=vertical_line_color, line_width=bar_line_width)
 
     slider = Slider(start=radius_range[0], end=radius_range[1], value=radius_range[0],
-                    step=(radius_range[1] - radius_range[0]) / 100, title="Rips Parameter")
+                    step=(radius_range[1] - radius_range[0]) / 100, title="Rips Parameter" , aspect_ratio=20)
     slider.js_on_change('value', callback)
 
     layout = column( row(filt_plot) ,slider,  barcode_plot, lscape_plot, sizing_mode="scale_both")
