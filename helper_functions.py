@@ -101,7 +101,8 @@ def pop(array, row):
 
 
 def Compute_Rivet(filtered_points, dim=1, resolution=20, RipsMax=1, description='default_description'):
-    filename = write_sample(filtered_points, RipsMax, description)
+    ambient_dim = filtered_points.shape[1] - 1
+    filename = write_sample(filtered_points, RipsMax, description, ambient_dim)
     computed_file_path = rivet.compute_file(filename,
                                             homology=dim,
                                             x=resolution,
@@ -112,10 +113,10 @@ def Compute_Rivet(filtered_points, dim=1, resolution=20, RipsMax=1, description=
 
 
 # TODO manage directory in which sample is written
-def write_sample(filtered_points, RipsMax, description):
+def write_sample(filtered_points, RipsMax, description, ambient_dim):
     A = filtered_points
     np.savetxt(description + 'RipsMax' + str(RipsMax) + '.txt', A, fmt='%1.4f',
-               header='points \n 2 \n ' + str(RipsMax) + ' \n' + description, comments='')
+               header='points \n ' + str(ambient_dim) + ' \n ' + str(RipsMax) + ' \n' + description, comments='')
     filename = description + 'RipsMax' + str(RipsMax) + '.txt'
     return filename
 

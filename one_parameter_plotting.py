@@ -9,7 +9,6 @@ from helper_functions import ripser_to_rivet_bcode, compute_landscapes
 
 
 def Rips_Filtration(points, radius_range):
-
     rips = Rips(maxdim=1, thresh=radius_range[1], verbose=False)
     barcodes = rips.transform(points)
     H_0_Bars = barcodes[0]
@@ -83,8 +82,6 @@ def Rips_Filtration(points, radius_range):
                          x_axis_label='Filtration Value',
                          x_range=(radius_range[0], radius_range[1]))
 
-
-
     for bar in range(len(H_0_Bars)):
         if H_0_Bars[bar, 1] < radius_range[1]:
             barcode_plot.line([H_0_Bars[bar, 0], H_0_Bars[bar, 1]], [bar / len(H_0_Bars), bar / len(H_0_Bars)],
@@ -115,7 +112,7 @@ def Rips_Filtration(points, radius_range):
         n = np.shape(L.landscapes[k].critical_points)[0]
         x = L.landscapes[k].critical_points[1:n, 0]
         y = L.landscapes[k].critical_points[1:n, 1]
-        if k < 3:
+        if k < 2:
             lscape_plot.line(x=x, y=y, color=H_0_color, line_alpha=1 / (k + 1), line_width=bar_line_width,
                              legend_label='H0: k =' + str(k + 2), muted_color=vertical_line_color, muted_alpha=1)
         else:
@@ -128,7 +125,7 @@ def Rips_Filtration(points, radius_range):
         n = np.shape(L.landscapes[k].critical_points)[0]
         x = L.landscapes[k].critical_points[1:n, 0]
         y = L.landscapes[k].critical_points[1:n, 1]
-        if k < 3:
+        if k < 2:
             lscape_plot.line(x=x, y=y, color=H_1_color, line_alpha=1 / (k + 1), line_width=bar_line_width,
                              legend_label='H1: k =' + str(k + 1), muted_color=vertical_line_color, muted_alpha=1)
         else:
@@ -140,9 +137,9 @@ def Rips_Filtration(points, radius_range):
                     source=vline, color=vertical_line_color, line_width=bar_line_width)
 
     slider = Slider(start=radius_range[0], end=radius_range[1], value=radius_range[0],
-                    step=(radius_range[1] - radius_range[0]) / 100, title="Rips Parameter" , aspect_ratio=20)
+                    step=(radius_range[1] - radius_range[0]) / 100, title="Rips Parameter", aspect_ratio=20)
     slider.js_on_change('value', callback)
 
-    layout = column( row(filt_plot) ,slider,  barcode_plot, lscape_plot, sizing_mode="scale_both")
+    layout = column(row(filt_plot), slider, barcode_plot, lscape_plot, sizing_mode="scale_both")
 
     return layout

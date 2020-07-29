@@ -49,7 +49,8 @@ def rotate_stack(landscape_stack):
     return rotated_landscape_stack
 
 
-def plot_a_two_parameter_landscape(multi_landscape: multiparameter_landscape, index: int, TOOLTIPS=None, high=None):
+def plot_a_two_parameter_landscape(multi_landscape: multiparameter_landscape, index: int, TOOLTIPS=None, high=None,
+                                   x_axis_label=None, y_axis_label=None):
     if (index > multi_landscape.maximum_landscape_depth) or (index < 0):
         raise TypeError('Index out of range')
 
@@ -79,9 +80,15 @@ def plot_a_two_parameter_landscape(multi_landscape: multiparameter_landscape, in
         title="Multiparameter Landscape k=" + str(index + 1),
         width=250,
         height=250,
-        sizing_mode='scale_both', match_aspect=True,
+        sizing_mode='scale_both',
+        match_aspect=True,
         toolbar_location=None
     )
+
+    if x_axis_label is not None:
+        plot.xaxis.axis_label = x_axis_label
+    if y_axis_label is not None:
+        plot.yaxis.axis_label = y_axis_label
 
     img = plot.image(source=source.data, image='image', x='x', y='y',
                      dw='dw', dh='dh',
@@ -94,7 +101,7 @@ def plot_a_two_parameter_landscape(multi_landscape: multiparameter_landscape, in
 
 
 def plot_multiparameter_landscapes(multi_landscape: multiparameter_landscape, indices=None,
-                                   TOOLTIPS=None, normalise_scale=True):
+                                   TOOLTIPS=None, normalise_scale=True, x_axis_label=None, y_axis_label=None):
     """ Plots the landscapes in the collection to a single axes in range index = [ind_min,ind_max]"""
 
     if indices is None:
@@ -105,7 +112,7 @@ def plot_multiparameter_landscapes(multi_landscape: multiparameter_landscape, in
     else:
         raise TypeError('Index range must provide integer values no bigger that the landscape depth')
     if normalise_scale:
-        high = np.max(multi_landscape.landscape_matrix[indices[0]-1, :, :])
+        high = np.max(multi_landscape.landscape_matrix[indices[0] - 1, :, :])
     else:
         high = None
     # Make Plot #
@@ -113,7 +120,8 @@ def plot_multiparameter_landscapes(multi_landscape: multiparameter_landscape, in
     plots = []
 
     for k in range(indices[0] - 1, indices[1]):
-        plots.append(plot_a_two_parameter_landscape(multi_landscape, k, TOOLTIPS=TOOLTIPS, high=high))
+        plots.append(plot_a_two_parameter_landscape(multi_landscape, k, TOOLTIPS=TOOLTIPS, high=high,
+                                                    x_axis_label=x_axis_label, y_axis_label=y_axis_label))
 
     for k in range(0, len(plots)):
         plots[k].x_range = plots[0].x_range
@@ -593,145 +601,6 @@ def compare_multiparameter_landscape_samples(Samples: List[List[multiparameter_l
     return DOM
 
 
-def Rips_Codensity_Bifiltration(points, radius_range, kNN: int = None, maxind: int = None, dim: int = None):
-    #     compute kNN codensity sum kNN dist for k = 1 to kNN default 5
-
-    if kNN is None:
-        kNN = 5
-    if maxind is None:
-        maxind = 5
-    if dim is None:
-        dim = 0
-
-    D = distance_matrix(points, points)
-    sortedD = np.sort(D)
-    codensity = np.sum(sortedD[:, :kNN+1], axis=1)
-    codensity = (radius_range[1] - radius_range[0]) * normalise_filter(codensity, 5) + radius_range[0]
-    alpha = np.ones(codensity.shape) * 0.3
-    exp_cmap = LinearColorMapper(palette="Viridis256",
-                                 low=radius_range[0],
-                                 high=radius_range[1])
-
-    source = ColumnDataSource(data=dict(x=points[:, 0],
-                                        y=points[:, 1],
-                                        sizes=(radius_range[0] + radius_range[1]) / 4 * np.ones(points.shape[0]),
-                                        codensity=codensity,
-                                        alpha=alpha
-
-                                        )
-                              )
-
-    vline = ColumnDataSource(data=dict(c=[radius_range[0]],
-                                       y=[0],
-                                       angle=[np.pi / 2]
-                                       )
-                             )
-    hline = ColumnDataSource(data=dict(s=[radius_range[0]],
-                                       x=[0],
-                                       angle=[0]
-                                       )
-                             )
-
-    filt_plot = figure(title='Filtration',
-                       plot_width=360,
-                       plot_height=430,
-                       min_border=0,
-                       toolbar_location=None,
-                       match_aspect=True)
-
-    glyph = Circle(x="x", y="y", radius="sizes", line_color="black",
-                   fill_color={'field': 'codensity', 'transform': exp_cmap},
-                   fill_alpha="alpha", line_width=1, line_alpha="alpha")
-
-    filt_plot.add_glyph(source, glyph)
-    filt_plot.add_layout(ColorBar(color_mapper=exp_cmap, location=(0, 0), orientation="horizontal"), "below")
-
-    rips_callback = CustomJS(args=dict(source=source, hline=hline), code="""
-    var data = source.data;
-    var s = cb_obj.value
-    var sizes = data['sizes']
-
-
-    for (var i = 0; i < sizes.length; i++) {
-        sizes[i] = s/2
-    }
-    var hdata = hline.data;
-    var step = hdata['s']
-    step[0] = s
-    hline.change.emit();
-    source.change.emit();
-    """)
-
-    codensity_callback = CustomJS(args=dict(source=source, vline=vline), code="""
-    var data = source.data;
-    var c = cb_obj.value
-    var alpha = data['alpha']
-    var codensity = data['codensity']
-
-    for (var i = 0; i<codensity.length; i++){
-        if(codensity[i]>c){
-        alpha[i] = 0
-        }
-        if(codensity[i]<c){
-        alpha[i] = 0.3
-        }
-    }
-
-    var vdata = vline.data;
-    var step = vdata['c']
-    step[0] = c
-    vline.change.emit();
-    source.change.emit();
-    """)
-
-    rips_slider = Slider(start=radius_range[0], end=radius_range[1], value=(radius_range[0] + radius_range[1]) / 2,
-                         step=(radius_range[1] - radius_range[0]) / 100, title="Rips",
-                         orientation="vertical", aspect_ratio=0.2,
-                         height_policy="auto", direction="rtl", height=300,
-                         margin=(10, 40, 10, 70))
-
-    rips_slider.js_on_change('value', rips_callback)
-
-    codensity_slider = Slider(start=radius_range[0], end=radius_range[1], value=radius_range[1],
-                              step=(radius_range[1] - radius_range[0]) / 100, title=str(kNN) + "NN-Codensity",
-                              orientation="horizontal", aspect_ratio=10,
-                              width_policy="auto", direction="ltr", width=300,
-                              margin=(10, 10, 10, 40))
-
-    codensity_slider.js_on_change('value', codensity_callback)
-
-    # Run Rivet and Landscape Computation #
-
-    filtered_points = np.hstack((points, np.expand_dims(codensity, axis=1)))
-    computed_data = Compute_Rivet(filtered_points, resolution=50, dim=dim, RipsMax=radius_range[1])
-    multi_landscape = multiparameter_landscape(computed_data,
-                                               grid_step_size=(radius_range[1] - radius_range[0]) / 100,
-                                               bounds=[[radius_range[0], radius_range[0]],
-                                                       [radius_range[1], radius_range[1]]],
-                                               maxind=maxind)
-
-    TOOLTIPS = [
-        ("Codensity", "$x"),
-        ("Radius", "$y"),
-        ("Landscape_Value", "@image")
-    ]
-
-    landscape_plots = plot_multiparameter_landscapes(multi_landscape, indices=[1, maxind], TOOLTIPS=TOOLTIPS)
-
-    for plot in landscape_plots.children:
-        plot.ray(x="c", y="y", length="y", angle="angle",
-                 source=vline, color='white', line_width=2, alpha=0.5)
-        plot.ray(x="x", y="s", length="x", angle="angle",
-                 source=hline, color='white', line_width=2, alpha=0.5)
-
-    layout = column(row(rips_slider,
-                        column(filt_plot, codensity_slider)),
-                    row(landscape_plots),
-                    sizing_mode="scale_both")
-
-    return layout
-
-
 def Rips_Filter_Bifiltration(filtered_points, radius_range, palette="Viridis256", FilterName="Filter",
                              maxind: int = None, dim: int = None):
     if maxind is None:
@@ -741,9 +610,6 @@ def Rips_Filter_Bifiltration(filtered_points, radius_range, palette="Viridis256"
 
     points = filtered_points[:, :2]
     filter = filtered_points[:, 2]
-    # Don't normalise filter
-    # filter = (radius_range[1] - radius_range[0]) * normalise_filter(filter, 5) + radius_range[0]
-    # filtered_points[:,2] = filter
 
     alpha = np.ones(filter.shape) * 0.3
     exp_cmap = LinearColorMapper(palette=palette,
@@ -770,19 +636,19 @@ def Rips_Filter_Bifiltration(filtered_points, radius_range, palette="Viridis256"
                                        )
                              )
 
-    filt_plot = figure(title='Filtration',
-                       plot_width=360,
-                       plot_height=430,
-                       min_border=0,
-                       toolbar_location=None,
-                       match_aspect=True)
+    filter_plot = figure(title='Filtration',
+                         plot_width=360,
+                         plot_height=430,
+                         min_border=0,
+                         toolbar_location=None,
+                         match_aspect=True)
 
     glyph = Circle(x="x", y="y", radius="sizes", line_color="black",
                    fill_color={'field': 'filter', 'transform': exp_cmap},
                    fill_alpha="alpha", line_width=1, line_alpha="alpha")
 
-    filt_plot.add_glyph(source, glyph)
-    filt_plot.add_layout(ColorBar(color_mapper=exp_cmap, location=(0, 0), orientation="horizontal"), "below")
+    filter_plot.add_glyph(source, glyph)
+    filter_plot.add_layout(ColorBar(color_mapper=exp_cmap, location=(0, 0), orientation="horizontal"), "below")
 
     rips_callback = CustomJS(args=dict(source=source, hline=hline), code="""
     var data = source.data;
@@ -824,17 +690,20 @@ def Rips_Filter_Bifiltration(filtered_points, radius_range, palette="Viridis256"
 
     rips_slider = Slider(start=radius_range[0], end=radius_range[1], value=(radius_range[0] + radius_range[1]) / 2,
                          step=(radius_range[1] - radius_range[0]) / 100, title="Rips",
-                         orientation="vertical", aspect_ratio=0.2,
-                         height_policy="auto", direction="rtl", height=300,
-                         margin=(10, 30, 10, 70)
+                         orientation="vertical",
+                         height=300,
+                         direction="rtl",
+                         margin=(10, 40, 10, 60)
                          )
 
     rips_slider.js_on_change('value', rips_callback)
 
     filter_slider = Slider(start=radius_range[0], end=radius_range[1], value=radius_range[1],
                            step=(radius_range[1] - radius_range[0]) / 100, title=FilterName,
-                           orientation="horizontal", aspect_ratio=10,
-                           width_policy="auto", direction="ltr", width=300,
+                           orientation="horizontal",
+                           aspect_ratio=10,
+                           width_policy="auto",
+                           direction="ltr", width=300,
                            margin=(10, 10, 10, 40)
                            )
 
@@ -855,7 +724,8 @@ def Rips_Filter_Bifiltration(filtered_points, radius_range, palette="Viridis256"
         ("Landscape_Value", "@image")
     ]
 
-    landscape_plots = plot_multiparameter_landscapes(multi_landscape, indices=[1, maxind], TOOLTIPS=TOOLTIPS)
+    landscape_plots = plot_multiparameter_landscapes(multi_landscape, indices=[1, maxind], TOOLTIPS=TOOLTIPS,
+                                                     x_axis_label=FilterName, y_axis_label="Rips Parameter")
 
     for plot in landscape_plots.children:
         plot.ray(x="c", y="y", length="y", angle="angle",
@@ -863,6 +733,26 @@ def Rips_Filter_Bifiltration(filtered_points, radius_range, palette="Viridis256"
         plot.ray(x="x", y="s", length="x", angle="angle",
                  source=hline, color='white', line_width=2, alpha=0.5)
 
-    layout = column(row(rips_slider, column(filt_plot, filter_slider)), row(landscape_plots), sizing_mode="scale_both")
+    layout = column(row(rips_slider, column(filter_plot, filter_slider)), row(landscape_plots),
+                    sizing_mode="scale_both")
 
     return layout
+
+
+def Rips_Codensity_Bifiltration(points, radius_range, kNN: int = None, maxind: int = None, dim: int = None):
+    if kNN is None:
+        kNN = 5
+    if maxind is None:
+        maxind = 5
+    if dim is None:
+        dim = 0
+
+    D = distance_matrix(points, points)
+    sortedD = np.sort(D)
+    codensity = np.sum(sortedD[:, :kNN + 1], axis=1)
+    codensity = (radius_range[1] - radius_range[0]) * normalise_filter(codensity, 5) + radius_range[0]
+    filtered_points = np.hstack((points, np.expand_dims(codensity, axis=1)))
+
+    return Rips_Filter_Bifiltration(filtered_points, radius_range, palette="Viridis256",
+                                    FilterName=str(kNN) + "NN-Codensity",
+                                    maxind=maxind, dim=dim)
