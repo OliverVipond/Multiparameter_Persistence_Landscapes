@@ -80,7 +80,6 @@ def plot_a_two_parameter_landscape(multi_landscape: multiparameter_landscape, in
         title="Multiparameter Landscape k=" + str(index + 1),
         width=250,
         height=250,
-        sizing_mode='scale_both',
         match_aspect=True,
         toolbar_location=None
     )
